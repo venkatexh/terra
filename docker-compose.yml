@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: terra-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: terra
+      POSTGRES_PASSWORD: terra
+      POSTGRES_DB: db
+    ports:
+      - "5432:5432"
+    volumes:
+     - ./pg_data:/var/lib/postgresql/data 
+
+  adminer:
+    image: adminer
+    container_name: terra-adminer
+    restart: always
+    ports:
+      - "9090:8080"
