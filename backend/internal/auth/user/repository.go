@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -14,21 +15,31 @@ func NewRepository(db *pgxpool.Pool) *Repository {
 	return &Repository{db: db}
 }
 
-func (r *Repository) Create(ctx context.Context, u *User) error {
+func (r *Repository) Create(email string) (*User, error) {
+	user := &User{
+		ID:    uuid.NewString(),
+		Email: email,
+	}
+
 	query := `
-		INSERT INTO users (id, email) 
+		INSERT INTO users (id, email)
 		VALUES ($1, $2)
+		RETURNING created_at
 	`
 
-	_, err := r.db.Exec(ctx, query, u.ID, u.Email)
-	return err
+	err := r.db.QueryRow(context.Background(), query,
+		user.ID,
+		user.Email,
+	).Scan(&user.CreatedAt)
+
+	return user, err
 }
 
 func (r *Repository) FindByEmail(ctx context.Context, email string) (*User, error) {
 	query := `
 		SELECT id, email, email_verified, created_at
-		FROM user
-		WHERE email = &1
+		FROM users
+		WHERE email = $1
 	`
 
 	row := r.db.QueryRow(ctx, query, email)

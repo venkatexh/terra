@@ -2,26 +2,26 @@ package auth
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"log"
 	"time"
-	"crypto/sha256"
-	"errors"
 
-	"terra/internal/token"
-	"terra/internal/user"
+	"terra/internal/auth/token"
+	"terra/internal/auth/user"
 
 	"github.com/google/uuid"
 )
 
 type Service struct {
-	users *user.Repository
+	users  *user.Repository
 	tokens *token.Repository
 }
 
 func NewService(u *user.Repository, t *token.Repository) *Service {
 	return &Service{
-		users: u,
+		users:  u,
 		tokens: t,
 	}
 }
@@ -29,9 +29,9 @@ func NewService(u *user.Repository, t *token.Repository) *Service {
 func (s *Service) RequestLoginLink(ctx context.Context, email string) error {
 	u, err := s.users.FindByEmail(ctx, email)
 	if err != nil {
-		u = &user.User{ID: uuid.NewString(), Email: email}
+		// u = &user.User{ID: uuid.NewString(), Email: email}
 
-		err = s.users.Create(ctx, u)
+		u, err = s.users.Create(email)
 		if err != nil {
 			return err
 		}
@@ -43,10 +43,10 @@ func (s *Service) RequestLoginLink(ctx context.Context, email string) error {
 	}
 
 	loginToken := &token.LoginToken{
-		ID: uuid.NewString(),
-		UserID: u.ID,
-		Hash: hash,
-		ExpiresAt: time.Now().Add(15 * time.Minute),	
+		ID:        uuid.NewString(),
+		UserID:    u.ID,
+		Hash:      hash,
+		ExpiresAt: time.Now().Add(15 * time.Minute),
 	}
 
 	err = s.tokens.Create(ctx, loginToken)
@@ -60,7 +60,7 @@ func (s *Service) RequestLoginLink(ctx context.Context, email string) error {
 	return nil
 }
 
-func (s *Service) VerifyLoginToken(ctx context.Context, rawToken string) (string,error) {
+func (s *Service) VerifyLoginToken(ctx context.Context, rawToken string) (string, error) {
 	hashBytes := sha256.Sum256([]byte(rawToken))
 	hash := hex.EncodeToString(hashBytes[:])
 
@@ -74,7 +74,7 @@ func (s *Service) VerifyLoginToken(ctx context.Context, rawToken string) (string
 		return "", errors.New("token already used")
 	}
 
-	if time.Now().After(t.ExpiresAt){
+	if time.Now().After(t.ExpiresAt) {
 		return "", errors.New("token expired")
 	}
 
