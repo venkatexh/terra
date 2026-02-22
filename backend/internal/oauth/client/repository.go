@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -14,7 +15,9 @@ func NewRepository(db *pgxpool.Pool) *Repository {
 }
 
 func (r *Repository) Create(ctx context.Context, c *Client) error {
+
 	tx, err := r.db.Begin(ctx)
+
 	if err != nil {
 		return err
 	}

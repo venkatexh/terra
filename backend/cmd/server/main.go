@@ -33,11 +33,10 @@ func main() {
 	defer pool.Close()
 
 	userRepo := user.NewRepository(pool)
-
+	clientRepo := client.NewRepository(pool)
 	authRepo := authcode.NewRepository(pool)
 	oauthTokenRepo := oauthToken.NewRepository(pool)
 	tokenRepo := token.NewRepository(pool)
-	clientRepo := client.NewRepository(pool)
 	sessionRepo := session.NewRepository(pool)
 	groupRepo := group.NewRepository(pool)
 	authorizationRepo := authorization.NewRepository(pool)
@@ -47,6 +46,7 @@ func main() {
 	tokenHandler := handlers.NewTokenHandler(authRepo, oauthTokenRepo, clientRepo)
 	// loginHandler := authHandlers.NewLoginHandler(sessionRepo)
 
+	clientSvc := client.NewService(clientRepo, projectRepo)
 	// authSvc := auth.NewService(userRepo, tokenRepo)
 
 	emailSvc := email.NewService()
@@ -59,6 +59,7 @@ func main() {
 	groupHandler := group.NewHandler(groupSvc)
 	authorizationHandler := authorization.NewHandler(authorizationSvc)
 	projectHandler := project.NewHandler(projectsSvc)
+	clientHandler := client.NewHandler(clientSvc)
 
 	r := chi.NewRouter()
 
@@ -119,7 +120,7 @@ func main() {
 	r.Post("/projects", projectHandler.CreateProject)
 	r.Get("/me/projects", projectHandler.GetProjects)
 
-	// r.Post("projects/{projectId}/clients", clientHandler.CreateClient)
+	r.Post("/projects/{projectId}/clients", clientHandler.CreateClient)
 	// r.Get("projects/{projectId}/clients", clientHandler.GetClients)
 
 	server := &http.Server{

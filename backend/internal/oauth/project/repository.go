@@ -39,7 +39,7 @@ func (r *Repository) FindByUserID(ctx context.Context, userID string) ([]Project
 	rows, err := r.db.Query(ctx, query, userID)
 	if err != nil {
 		return nil, err
-	}	
+	}
 
 	var projects []Project
 	for rows.Next() {
@@ -52,4 +52,20 @@ func (r *Repository) FindByUserID(ctx context.Context, userID string) ([]Project
 	}
 
 	return projects, nil
+}
+
+func (r *Repository) ExistsByIDAndUser(
+	ctx context.Context,
+	projectID, userID string,
+) (bool, error) {
+
+	query := `
+    SELECT EXISTS (
+    SELECT 1 FROM oauth_projects
+    WHERE id=$1 AND user_id=$2
+  )`
+	var exists bool
+
+	err := r.db.QueryRow(ctx, query, projectID, userID).Scan(&exists)
+	return exists, err
 }
