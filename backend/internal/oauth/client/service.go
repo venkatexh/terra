@@ -52,3 +52,22 @@ func (s *Service) RegisterClient(ctx context.Context, name string, uris []string
 
 	return client, nil
 }
+
+func (s *Service) FindByUserID(ctx context.Context, userID, projectID string) ([]Client, error) {
+
+	ok, err := s.projectRepo.ExistsByIDAndUser(
+		ctx,
+		projectID,
+		userID,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if !ok {
+		return nil, errors.New("unauthorized project access")
+	}
+	
+	return s.clientRepo.FindByUserID(ctx, projectID)
+}

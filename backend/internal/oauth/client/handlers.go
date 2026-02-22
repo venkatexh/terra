@@ -40,3 +40,19 @@ func (h *Handler) CreateClient(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(client)
 }
+
+func (h *Handler) GetClients(w http.ResponseWriter, r *http.Request) {
+
+	userID := r.Context().Value(middleware.UserKey).(string)
+	projectID := chi.URLParam(r, "projectId")
+
+	clients, err := h.service.FindByUserID(r.Context(), userID, projectID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(clients)
+}
+
