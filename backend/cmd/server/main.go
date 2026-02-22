@@ -1,28 +1,28 @@
 package main
 
 import (
-	"context"
+	// "context"
 	"log"
 	"net/http"
-	"time"
-
-	"terra/internal/auth"
-	"terra/internal/config"
-	"terra/internal/db"
-	"terra/internal/oauth/authcode"
-	"terra/internal/oauth/client"
-	"terra/internal/oauth/handlers"
-	oauthToken "terra/internal/oauth/token"
+	"terra/internal/auth/magic"
 	"terra/internal/auth/token"
 	"terra/internal/auth/user"
-	"terra/internal/session"
+	"terra/internal/config"
+	"terra/internal/db"
+	"terra/internal/email"
+	"terra/internal/group"
 	"terra/internal/middleware"
-	authHandlers "terra/internal/auth/handlers"
-	"terra/internal/auth/magic"
+	"terra/internal/oauth/authcode"
+	"terra/internal/oauth/authorization"
+	"terra/internal/oauth/client"
+	"terra/internal/oauth/handlers"
+	"terra/internal/oauth/project"
+	oauthToken "terra/internal/oauth/token"
+	"terra/internal/session"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
-	// "github.com/google/uuid"
 )
 
 func main() {
@@ -34,79 +34,55 @@ func main() {
 
 	userRepo := user.NewRepository(pool)
 
-	// testUser := &user.User{
-	// 	ID:    uuid.NewString(),
-	// 	Email: "test@terra.dev",
-	// }
-
-	// err := userRepo.Create(context.Background(), testUser)
-
-	// if err != nil {
-	// 	log.Println("User insert error:", err)
-	// } else {
-	// 	log.Println("User created:", testUser)
-	// }
-
 	authRepo := authcode.NewRepository(pool)
 	oauthTokenRepo := oauthToken.NewRepository(pool)
 	tokenRepo := token.NewRepository(pool)
 	clientRepo := client.NewRepository(pool)
 	sessionRepo := session.NewRepository(pool)
+	groupRepo := group.NewRepository(pool)
+	authorizationRepo := authorization.NewRepository(pool)
+	projectRepo := project.NewRepository(pool)
 
 	authorizeHandler := handlers.NewAuthorizeHandler(authRepo)
 	tokenHandler := handlers.NewTokenHandler(authRepo, oauthTokenRepo, clientRepo)
-	loginHandler := authHandlers.NewLoginHandler(sessionRepo)
+	// loginHandler := authHandlers.NewLoginHandler(sessionRepo)
 
-	magicService := magic.NewService(userRepo, tokenRepo, sessionRepo, magic.ConsoleMailer{})
+	// authSvc := auth.NewService(userRepo, tokenRepo)
+
+	emailSvc := email.NewService()
+	magicService := magic.NewService(userRepo, tokenRepo, sessionRepo, emailSvc)
+	groupSvc := group.NewService(groupRepo)
+	authorizationSvc := authorization.NewService(authorizationRepo)
+	projectsSvc := project.NewService(projectRepo)
+
 	magicHandler := magic.NewHandler(magicService)
-
-	// raw, hash, _ := token.GenerateToken()
-
-	// loginToken := &token.LoginToken{
-	// 	ID:        uuid.NewString(),
-	// 	UserID:    testUser.ID,
-	// 	Hash:      hash,
-	// 	ExpiresAt: time.Now().Add(time.Hour),
-	// }
-
-	// err = tokenRepo.Create(context.Background(), loginToken)
-	// if err != nil {
-	// 	log.Println("Login token insert error:", err)
-	// } else {
-	// 	log.Println("Login token created:", loginToken)
-	// 	log.Println("Raw token (for email):", raw)
-	// }
-
-	authSvc := auth.NewService(userRepo, tokenRepo)
-
-	clientSvc := client.NewService(clientRepo)
-
-	client, err := clientSvc.RegisterClient(
-		context.Background(),
-		"test",
-		[]string{"http://localhost:3000/callback"},
-	)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	log.Println("ClientID:", client.ClientID)
-	log.Println("ClientSecret:", client.ClientSecret)
+	groupHandler := group.NewHandler(groupSvc)
+	authorizationHandler := authorization.NewHandler(authorizationSvc)
+	projectHandler := project.NewHandler(projectsSvc)
 
 	r := chi.NewRouter()
 
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"*"},
-		AllowedMethods:   []string{"GET", "PUT", "POST", "DELETE"},
-		AllowedHeaders:   []string{"Access", "Authorization", "Content-Type"},
-		AllowCredentials: false,
+		AllowedOrigins: []string{"http://localhost:3000"},
+		AllowedMethods: []string{"GET", "PUT", "POST", "DELETE"},
+		AllowedHeaders: []string{
+			"Access",
+			"Authorization",
+			"Content-Type",
+			"X-CSRF-Token",
+		},
+
+		ExposedHeaders: []string{
+			"Link",
+		},
+
+		AllowCredentials: true,
 		MaxAge:           300,
 	}))
 
 	r.Use(middleware.NewSessionMiddleware(sessionRepo).Middleware)
 
-	r.Get("/login", loginHandler.Login)
+	// r.Get("/login", loginHandler.Login)
 
 	r.Get("/me", func(w http.ResponseWriter, r *http.Request) {
 		userID, ok := r.Context().Value(middleware.UserKey).(string)
@@ -123,9 +99,9 @@ func main() {
 		w.Write([]byte("Terra server running.."))
 	})
 
-	r.Post("/auth/request-link", auth.RequestLinkHandler(authSvc))
+	// r.Post("/auth/request-link", auth.RequestLinkHandler(authSvc))
 
-	r.Post("/auth/verify-link", auth.VerifyLinkHandler(authSvc))
+	// r.Post("/auth/verify-link", auth.VerifyLinkHandler(authSvc))
 
 	r.Get("/oauth/authorize", authorizeHandler.Authorize)
 
@@ -133,6 +109,18 @@ func main() {
 
 	r.Post("/auth/magic-link/request", magicHandler.RequestLink)
 	r.Get("/auth/magic-link/verify", magicHandler.VerifyLink)
+
+	r.Post("/authorizations", authorizationHandler.CreateAuthorization)
+	r.Get("/authorizations", authorizationHandler.GetAuthorizationByGroupID)
+
+	r.Get("/me/groups", groupHandler.GetGroups)
+	r.Get("/me/groups/{appGroupID}", groupHandler.GetGroup)
+
+	r.Post("/projects", projectHandler.CreateProject)
+	r.Get("/me/projects", projectHandler.GetProjects)
+
+	// r.Post("projects/{projectId}/clients", clientHandler.CreateClient)
+	// r.Get("projects/{projectId}/clients", clientHandler.GetClients)
 
 	server := &http.Server{
 		Addr:         ":8080",

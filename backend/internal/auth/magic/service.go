@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
+	"log"
 	"terra/internal/auth/token"
 	"terra/internal/auth/user"
 	"terra/internal/session"
@@ -58,14 +60,16 @@ func (s *Service) RequestMagicLink(ctx context.Context, email string) error {
 		return err
 	}
 
-	loginLink := "http://localhost:3000/auth/verify?token=" + rawToken
-	return s.mailer.SendMagicLink(email, loginLink)
+	link := fmt.Sprintf("http://localhost:8080/auth/magic-link/verify?token=%s", rawToken)
+
+	// return s.mailer.SendMagicLink(email, link)
+	log.Println("Login link", link)
+	return nil
 }
 
 func (s *Service) VerifyMagicToken(ctx context.Context, rawToken string) (string, error) {
 	hash := HashToken(rawToken)
 
-	// 1️⃣ find token
 	token, err := s.tokens.FindByHash(ctx, hash)
 	if err != nil {
 		return "", err
@@ -89,7 +93,6 @@ func (s *Service) VerifyMagicToken(ctx context.Context, rawToken string) (string
 		return "", err
 	}
 
-	// 4️⃣ create session
 	session := &session.Session{
 		ID:        uuid.NewString(),
 		UserID:    token.UserID,
@@ -100,6 +103,5 @@ func (s *Service) VerifyMagicToken(ctx context.Context, rawToken string) (string
 		return "", err
 	}
 
-	// return session ID so handler can set cookie
 	return session.ID, nil
 }
