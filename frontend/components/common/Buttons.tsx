@@ -1,5 +1,6 @@
 type ButtonProps = {
   className?: string;
+  transparent?: boolean;
   children: React.ReactNode;
   handleButtonClick: () => void | null;
 };
@@ -7,13 +8,14 @@ type ButtonProps = {
 export function DefaultButton({
   children,
   className,
+  transparent,
   handleButtonClick,
 }: ButtonProps) {
   return (
     <button
       onClick={() => handleButtonClick()}
-      className={`${className} bg-orange-600 hover:bg-orange-700 
-      text-white font-semibold py-1 px-4 rounded cursor-pointer`}>
+      className={`${className} ${!transparent ? "bg-orange-600 hover:bg-orange-700 text-white" : "border border-orange-600 text-orange-600"} 
+      font-semibold py-1 px-4 rounded cursor-pointer`}>
       {children}
     </button>
   );
