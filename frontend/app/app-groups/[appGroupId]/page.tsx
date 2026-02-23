@@ -1,6 +1,6 @@
 "use client";
 
-import AuthorizedAppCard from "@/components/app-groups/appGroupId/AuthorizedAppCard";
+import AuthorizedAppCard from "@/components/app/app-groups/appGroupId/AuthorizedAppCard";
 import useAxios from "@/hooks/useAxios";
 import { baseURL } from "@/lib/constants/baseURL";
 import { useParams } from "next/navigation";
@@ -33,9 +33,9 @@ export default function AppGroupPage() {
 
   return (
     <div>
-      <div className="pb-4">
-        <div className="text-xs">App group</div>
-        <div className="text-xl">{group?.name}</div>
+      <div className='pb-4'>
+        <div className='text-xs'>App group</div>
+        <div className='text-xl'>{group?.name}</div>
       </div>
 
       <div>

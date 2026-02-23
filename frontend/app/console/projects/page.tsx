@@ -1,6 +1,6 @@
 "use client";
 
-import ProjectCard from "@/components/console/projects/ProjectCard";
+import ProjectCard from "@/components/app/console/projects/ProjectCard";
 import useAxios from "@/hooks/useAxios";
 import { useEffect, useState } from "react";
 

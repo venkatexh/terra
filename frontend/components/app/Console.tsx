@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { DefaultText } from "./common/Texts";
+import { DefaultText } from "../common/Texts";
 
 export default function Console() {
   return (

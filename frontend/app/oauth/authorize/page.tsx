@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import useAxios from "@/hooks/useAxios";
-import LoginView from "@/components/oauth/authorize/LoginView";
-import ConsentView from "@/components/oauth/authorize/ConsentView";
+import LoginView from "@/components/app/oauth/authorize/LoginView";
+import ConsentView from "@/components/app/oauth/authorize/ConsentView";
 
 export default function AuthorizePage() {
   const axios = useAxios();

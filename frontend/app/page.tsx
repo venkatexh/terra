@@ -1,8 +1,8 @@
 "use client";
 
 import { HeadingText } from "@/components/common/Texts";
-import Console from "@/components/Console";
-import Profiles from "@/components/Profiles";
+import Console from "@/components/app/Console";
+import Profiles from "@/components/app/Profiles";
 import useAxios from "@/hooks/useAxios";
 import { useEffect, useState } from "react";
 import { Me } from "./types";

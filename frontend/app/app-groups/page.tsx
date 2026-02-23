@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 
 import { baseURL } from "@/lib/constants/baseURL";
 
-import GroupCard from "@/components/app-groups/GroupCard";
+import GroupCard from "@/components/app/app-groups/GroupCard";
 
 export default function ProfilesPage() {
   const axios = useAxios();

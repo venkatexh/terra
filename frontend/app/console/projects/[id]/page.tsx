@@ -10,7 +10,7 @@ import {
   SubheadingText,
 } from "@/components/common/Texts";
 import { DefaultButton } from "@/components/common/Buttons";
-import ClientCard from "@/components/console/projects/[id]/ClientCard";
+import ClientCard from "@/components/app/console/projects/[id]/ClientCard";
 
 type Project = {
   id: string;
