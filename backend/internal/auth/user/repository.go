@@ -41,13 +41,36 @@ func (r *Repository) FindByEmail(ctx context.Context, email string) (*User, erro
 		FROM users
 		WHERE email = $1
 	`
-
 	row := r.db.QueryRow(ctx, query, email)
 
 	var u User
 	err := row.Scan(
 		&u.ID,
 		&u.Email,
+		&u.EmailVerified,
+		&u.CreatedAt,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &u, nil
+}
+
+func (r *Repository) FindByID(ctx context.Context, id string) (*User, error) {
+	query := `
+		SELECT id, email, name, email_verified, created_at
+		FROM users
+		WHERE id = $1
+	`
+	row := r.db.QueryRow(ctx, query, id)
+
+	var u User
+	err := row.Scan(
+		&u.ID,
+		&u.Email,
+		&u.Name,
 		&u.EmailVerified,
 		&u.CreatedAt,
 	)

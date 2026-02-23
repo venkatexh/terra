@@ -46,6 +46,7 @@ func main() {
 	tokenHandler := handlers.NewTokenHandler(authRepo, oauthTokenRepo, clientRepo)
 	// loginHandler := authHandlers.NewLoginHandler(sessionRepo)
 
+	userSvc := user.NewService(userRepo)
 	clientSvc := client.NewService(clientRepo, projectRepo)
 	// authSvc := auth.NewService(userRepo, tokenRepo)
 
@@ -55,6 +56,7 @@ func main() {
 	authorizationSvc := authorization.NewService(authorizationRepo)
 	projectsSvc := project.NewService(projectRepo)
 
+	userHandler := user.NewHandler(userSvc)
 	magicHandler := magic.NewHandler(magicService)
 	groupHandler := group.NewHandler(groupSvc)
 	authorizationHandler := authorization.NewHandler(authorizationSvc)
@@ -85,16 +87,18 @@ func main() {
 
 	// r.Get("/login", loginHandler.Login)
 
-	r.Get("/me", func(w http.ResponseWriter, r *http.Request) {
-		userID, ok := r.Context().Value(middleware.UserKey).(string)
+	// r.Get("/me", func(w http.ResponseWriter, r *http.Request) {
+	// 	userID, ok := r.Context().Value(middleware.UserKey).(string)
 
-		if !ok {
-			w.Write([]byte("Not logged in"))
-			return
-		}
+	// 	if !ok {
+	// 		w.Write([]byte("Not logged in"))
+	// 		return
+	// 	}
 
-		w.Write([]byte("Logged in user with ID: " + userID))
-	})
+	// 	w.Write([]byte("Logged in user with ID: " + userID))
+	// })
+
+	r.Get("/me", userHandler.FindMe)
 
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Terra server running.."))
