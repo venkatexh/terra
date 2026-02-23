@@ -124,6 +124,8 @@ func main() {
 	r.Post("/projects/{projectId}/clients", clientHandler.CreateClient)
 	r.Get("/projects/{projectId}/clients", clientHandler.GetClients)
 
+	r.Get("/oauth/clients/{clientId}", clientHandler.GetClient)
+
 	server := &http.Server{
 		Addr:         ":8080",
 		Handler:      r,

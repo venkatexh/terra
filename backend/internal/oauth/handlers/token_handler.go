@@ -4,23 +4,23 @@ import (
 	"encoding/json"
 	"net/http"
 	"terra/internal/oauth/authcode"
-	"terra/internal/oauth/token"
 	"terra/internal/oauth/client"
+	"terra/internal/oauth/token"
 	"time"
 
 	"github.com/google/uuid"
 )
 
 type TokenHandler struct {
-	authRepo *authcode.Repository
-	tokenRepo *token.Repository
+	authRepo   *authcode.Repository
+	tokenRepo  *token.Repository
 	clientRepo *client.Repository
 }
 
 func NewTokenHandler(a *authcode.Repository, t *token.Repository, c *client.Repository) *TokenHandler {
 	return &TokenHandler{
-		authRepo: a,
-		tokenRepo: t,
+		authRepo:   a,
+		tokenRepo:  t,
 		clientRepo: c,
 	}
 }
@@ -34,7 +34,7 @@ func (h *TokenHandler) Exchange(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	client, err := h.clientRepo.GetByClientID(r.Context(), clientID)
+	client, err := h.clientRepo.FindByClientID(r.Context(), clientID)
 
 	if err != nil {
 		http.Error(w, "invalid client", 401)
@@ -77,9 +77,9 @@ func (h *TokenHandler) Exchange(w http.ResponseWriter, r *http.Request) {
 	}
 
 	accessToken := &token.AccessToken{
-		Token: uuid.NewString(),
-		UserID: authCode.UserID,
-		ClientID: authCode.ClientID,
+		Token:     uuid.NewString(),
+		UserID:    authCode.UserID,
+		ClientID:  authCode.ClientID,
 		ExpiresAt: time.Now().Add(1 * time.Hour),
 	}
 
@@ -91,10 +91,10 @@ func (h *TokenHandler) Exchange(w http.ResponseWriter, r *http.Request) {
 
 	response := map[string]interface{}{
 		"access_token": accessToken.Token,
-		"token_type": "Bearer",
-		"expires_in": 3600,
+		"token_type":   "Bearer",
+		"expires_in":   3600,
 	}
-	
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 }

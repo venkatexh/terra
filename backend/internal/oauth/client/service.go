@@ -39,12 +39,11 @@ func (s *Service) RegisterClient(ctx context.Context, name string, uris []string
 		Name:         name,
 		ClientID:     GenerateClientID(),
 		ClientSecret: GenerateSecret(),
-		RedirectURIs: uris,
 		ProjectID:    projectID,
 		CreatedAt:    time.Now(),
 	}
 
-	err = s.clientRepo.Create(ctx, client)
+	err = s.clientRepo.Create(ctx, client, uris)
 
 	if err != nil {
 		return nil, err
@@ -53,7 +52,7 @@ func (s *Service) RegisterClient(ctx context.Context, name string, uris []string
 	return client, nil
 }
 
-func (s *Service) FindByUserID(ctx context.Context, userID, projectID string) ([]Client, error) {
+func (s *Service) FindByUserID(ctx context.Context, userID, projectID string) ([]ClientResponse, error) {
 
 	ok, err := s.projectRepo.ExistsByIDAndUser(
 		ctx,
@@ -68,6 +67,10 @@ func (s *Service) FindByUserID(ctx context.Context, userID, projectID string) ([
 	if !ok {
 		return nil, errors.New("unauthorized project access")
 	}
-	
+
 	return s.clientRepo.FindByUserID(ctx, projectID)
+}
+
+func (s *Service) FindClientByClientID(ctx context.Context, clientID string) (*ClientResponse, error) {
+	return s.clientRepo.FindByClientID(ctx, clientID)
 }

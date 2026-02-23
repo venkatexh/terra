@@ -20,7 +20,7 @@ func (h *Handler) CreateClient(w http.ResponseWriter, r *http.Request) {
 
 	projectID := chi.URLParam(r, "projectId")
 
-	var req Client
+	var req ClientRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -56,3 +56,15 @@ func (h *Handler) GetClients(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(clients)
 }
 
+func (h *Handler) GetClient(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "clientId")
+
+	client, err := h.service.FindClientByClientID(r.Context(), id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(client)
+}
