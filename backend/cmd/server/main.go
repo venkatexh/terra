@@ -119,6 +119,7 @@ func main() {
 
 	r.Post("/projects", projectHandler.CreateProject)
 	r.Get("/me/projects", projectHandler.GetProjects)
+	r.Get("/projects/{projectId}", projectHandler.GetProject)
 
 	r.Post("/projects/{projectId}/clients", clientHandler.CreateClient)
 	r.Get("/projects/{projectId}/clients", clientHandler.GetClients)

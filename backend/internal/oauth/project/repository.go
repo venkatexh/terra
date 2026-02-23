@@ -54,6 +54,24 @@ func (r *Repository) FindByUserID(ctx context.Context, userID string) ([]Project
 	return projects, nil
 }
 
+func (r *Repository) FindByID(ctx context.Context, id string) (*Project, error) {
+	query := `
+		SELECT id, user_id, name, description
+		FROM oauth_projects
+		WHERE id = $1
+	`
+
+	row := r.db.QueryRow(ctx, query, id)
+
+	var p Project
+	err := row.Scan(&p.ID, &p.UserID, &p.Name, &p.Description)
+	if err != nil {
+		return nil, err
+	}
+
+	return &p, nil
+}
+
 func (r *Repository) ExistsByIDAndUser(
 	ctx context.Context,
 	projectID, userID string,

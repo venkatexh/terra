@@ -6,6 +6,7 @@ import (
 
 	"terra/internal/middleware"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 )
 
@@ -57,4 +58,19 @@ func (h *Handler) GetProjects(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(projects)
+}
+
+func (h *Handler) GetProject(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "projectId")
+	userID := r.Context().Value(middleware.UserKey).(string)
+
+	project, err := h.service.FindProjectByID(r.Context(), id, userID)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(project)
 }
