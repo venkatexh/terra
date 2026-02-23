@@ -9,13 +9,12 @@ type ClientCardProps = {
 };
 
 export default function ClientCard({
-  id,
   name,
   clientId,
   clientSecret,
 }: ClientCardProps) {
   return (
-    <Link href={`/console/clients/${id}`}>
+    <Link href={`/console/clients/${clientId}`}>
       <div className='p-4 flex flex-col bg-slate-900 rounded-xl'>
         <LargeText name>{name}</LargeText>
         <div className='py-2 flex'>
