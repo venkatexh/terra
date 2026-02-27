@@ -15,7 +15,7 @@ export function DefaultButton({
     <button
       onClick={() => handleButtonClick()}
       className={`${className} ${!transparent ? "bg-orange-600 hover:bg-orange-700 text-white" : "border border-orange-600 text-orange-600"} 
-      font-semibold py-1 px-4 rounded cursor-pointer`}>
+      text-sm font-semibold py-1 px-4 rounded cursor-pointer`}>
       {children}
     </button>
   );
