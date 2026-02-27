@@ -38,12 +38,15 @@ func (h *Handler) CreateProject(w http.ResponseWriter, r *http.Request) {
 		Description: description,
 	}
 
-	if err := h.service.CreateProject(r.Context(), project); err != nil {
+	proj, err := h.service.CreateProject(r.Context(), project)
+	
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(proj)
 }
 
 func (h *Handler) GetProjects(w http.ResponseWriter, r *http.Request) {

@@ -14,19 +14,23 @@ func NewRepository(db *pgxpool.Pool) *Repository {
 	return &Repository{db: db}
 }
 
-func (r *Repository) Create(ctx context.Context, p *Project) error {
+func (r *Repository) Create(ctx context.Context, p *Project) (*Project, error) {
 	query := `
 		INSERT INTO oauth_projects
 		(id, user_id, name, description)
 		VALUES ($1, $2, $3, $4)
 	`
-
 	_, err := r.db.Exec(ctx, query, p.ID, p.UserID, p.Name, p.Description)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	proj, err := r.FindByID(ctx, p.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return proj, nil
 }
 
 func (r *Repository) FindByUserID(ctx context.Context, userID string) ([]Project, error) {
@@ -35,7 +39,6 @@ func (r *Repository) FindByUserID(ctx context.Context, userID string) ([]Project
 		FROM oauth_projects
 		WHERE user_id = $1
 	`
-
 	rows, err := r.db.Query(ctx, query, userID)
 	if err != nil {
 		return nil, err
@@ -60,7 +63,6 @@ func (r *Repository) FindByID(ctx context.Context, id string) (*Project, error) 
 		FROM oauth_projects
 		WHERE id = $1
 	`
-
 	row := r.db.QueryRow(ctx, query, id)
 
 	var p Project

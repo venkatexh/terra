@@ -13,7 +13,7 @@ func NewService(repo *Repository) *Service {
 	return &Service{repo: repo}
 }
 
-func (s *Service) CreateProject(ctx context.Context, p *Project) error {
+func (s *Service) CreateProject(ctx context.Context, p *Project) (*Project,error) {
 	return s.repo.Create(ctx, p)
 }
 
