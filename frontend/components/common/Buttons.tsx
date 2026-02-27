@@ -3,7 +3,7 @@ type ButtonProps = {
   className?: string;
   transparent?: boolean;
   children: React.ReactNode;
-  handleButtonClick: () => void | null;
+  handleButtonClick?: () => void | null;
 };
 
 export function DefaultButton({
@@ -16,7 +16,7 @@ export function DefaultButton({
   return (
     <button
       type={type}
-      onClick={() => handleButtonClick()}
+      onClick={() => handleButtonClick && handleButtonClick()}
       className={`${className} ${
         !transparent
           ? "bg-orange-600 hover:bg-orange-700 text-white"
@@ -35,7 +35,7 @@ export function SecondaryButton({
 }: ButtonProps) {
   return (
     <button
-      onClick={() => handleButtonClick()}
+      onClick={() => handleButtonClick && handleButtonClick()}
       className={`${className} w-full bg-slate-200 hover:bg-slate-400 
       text-slate-900 font-bold py-2 px-4 rounded`}>
       {children}

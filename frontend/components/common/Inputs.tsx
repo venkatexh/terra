@@ -10,7 +10,7 @@ export const FormInput = ({
   placeholder,
 }: Input) => {
   return (
-    <div className='flex flex-col gap-1'>
+    <div className='w-full flex flex-col gap-1'>
       {label && <SmallText>{label}</SmallText>}
       <input
         type={type}
@@ -35,7 +35,7 @@ export const FormTextArea = ({
   placeholder,
 }: Input) => {
   return (
-    <div className='flex flex-col gap-1'>
+    <div className='w-full flex flex-col gap-1'>
       {label && <SmallText>{label}</SmallText>}
       <textarea
         name={name}
@@ -63,7 +63,7 @@ export const SearchInput = ({ placeholder, className, onChange }: Input) => {
 type Input = {
   type?: string;
   name: string;
-  value: string;
+  value?: string;
   label: string;
   resize?: boolean;
   className?: string;
