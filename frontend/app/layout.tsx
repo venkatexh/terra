@@ -1,5 +1,7 @@
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { Geist, Geist_Mono } from "next/font/google";
+import { ModalProvider } from "@/contexts/modal-context";
+import PrimaryNavbar from "@/components/nav/PrimaryNavbar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,7 +22,10 @@ export default function RootLayout({
     <html lang='en'>
       <body
         className={`w-1/2 h-auto mx-auto ${geistSans.variable} ${geistMono.variable} antialiased py-12`}>
-        {children}
+        <ModalProvider>
+          <PrimaryNavbar />
+          <div className='mt-12'>{children}</div>
+        </ModalProvider>
       </body>
     </html>
   );
