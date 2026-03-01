@@ -3,6 +3,7 @@
 import useAxios from "@/hooks/useAxios";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useModal } from "@/contexts/modal-context";
 
 import {
   LargeText,
@@ -11,23 +12,16 @@ import {
 } from "@/components/common/Texts";
 import { DefaultButton } from "@/components/common/Buttons";
 import ClientCard from "@/components/app/console/projects/[id]/ClientCard";
+import NewClientModal from "@/components/app/console/projects/[id]/NewClientModal";
 
-type Project = {
-  id: string;
-  name: string;
-  description: string;
-};
-
-type Client = {
-  id: string;
-  name: string;
-  clientId: string;
-  clientSecret: string;
-};
+import { Project } from "@/types/console/projects/Project";
+import { Client } from "@/types/console/projects/[id]/Client";
+import { ClientForm } from "@/types/console/projects/[id]/ClientForm";
 
 export default function ProjectPage() {
   const axios = useAxios();
   const params = useParams();
+  const { openModal, closeModal } = useModal();
 
   const [project, setProject] = useState<Project>();
   const [clients, setClients] = useState<Client[]>([]);
@@ -54,12 +48,35 @@ export default function ProjectPage() {
     fetchProjectClients();
   }, [params.id, axios]);
 
+  const createNewClient = async (formData: ClientForm) => {
+    try {
+      const res = await axios.post(`/projects/${params.id}/clients`, {
+        name: formData.name,
+        redirectUris: formData.redirectUris,
+      });
+      closeModal();
+      setClients([...clients, res.data]);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleNewClientClick = () => {
+    openModal(
+      <NewClientModal
+        handleNewClientClick={(formData) => createNewClient(formData)}
+      />,
+    );
+  };
+
   return (
     <div>
       <div>
         <div className='flex justify-between items-center'>
           <SubheadingText name>{project?.name}</SubheadingText>
-          <DefaultButton handleButtonClick={() => {}}>+ New</DefaultButton>
+          <DefaultButton handleButtonClick={() => handleNewClientClick()}>
+            + New
+          </DefaultButton>
         </div>
         <DefaultText>{project?.description}</DefaultText>
       </div>
