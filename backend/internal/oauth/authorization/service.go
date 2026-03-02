@@ -17,7 +17,7 @@ func (s *Service) CreateAuthorization(ctx context.Context, groupID, clientDBID s
 }
 
 func (s *Service) HasConsent(ctx context.Context, userID, clientID string) (bool, error) {
-	a, err := s.repo.FindByUserIDandClientID(ctx, userID, clientID)
+	a, err := s.repo.FindByUserIDandClientDBID(ctx, userID, clientID)
 	if err != nil {
 		return false, nil
 	}

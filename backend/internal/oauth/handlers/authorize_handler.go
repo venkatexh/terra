@@ -4,18 +4,22 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/google/uuid"
-
 	"terra/internal/middleware"
 	"terra/internal/oauth/authcode"
+	"terra/internal/oauth/authorization"
+	"terra/internal/oauth/client"
+
+	"github.com/google/uuid"
 )
 
 type AuthorizeHandler struct {
-	authRepo *authcode.Repository
+	authorizationRepo *authorization.Repository
+	authCodeRepo      *authcode.Repository
+	clientRepo        *client.Repository
 }
 
-func NewAuthorizeHandler(repo *authcode.Repository) *AuthorizeHandler {
-	return &AuthorizeHandler{authRepo: repo}
+func NewAuthorizeHandler(a *authorization.Repository, ac *authcode.Repository, c *client.Repository) *AuthorizeHandler {
+	return &AuthorizeHandler{authorizationRepo: a, authCodeRepo: ac, clientRepo: c}
 }
 
 func (h *AuthorizeHandler) Authorize(w http.ResponseWriter, r *http.Request) {
@@ -32,28 +36,45 @@ func (h *AuthorizeHandler) Authorize(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value(middleware.UserKey).(string)
 
 	if !ok {
-		http.Error(w, "not logged in", http.StatusUnauthorized)
+		http.Error(w, "Not logged in", 401)
 		return
 	}
 
-	code := uuid.NewString()
-
-	authCode := &authcode.AuthorizationCode{
-		Code: code,
-		ClientID: clientID,
-		UserID: userID,
-		RedirectURI: redirectURI,
-		ExpiresAt: time.Now().Add(5 * time.Minute),
-	}
-
-	err := h.authRepo.Create(r.Context(), authCode)
+	clientDBID, err := h.clientRepo.GetClientDBIDByClientID(r.Context(), clientID)
 
 	if err != nil {
 		http.Error(w, "server error", 500)
 		return
 	}
 
-	redirect := redirectURI + "?code=" + code + "&state=" + state
+	exists, err := h.authorizationRepo.CheckExists(r.Context(), userID, clientDBID)
 
-	http.Redirect(w, r, redirect, http.StatusFound)
+	if err != nil {
+		http.Error(w, "server error", 500)
+		return
+	}
+
+	if exists {
+		code := uuid.NewString()
+
+		authCode := &authcode.AuthorizationCode{
+			Code:        code,
+			ClientID:    clientID,
+			UserID:      userID,
+			RedirectURI: redirectURI,
+			ExpiresAt:   time.Now().Add(5 * time.Minute),
+		}
+
+		err = h.authCodeRepo.Create(r.Context(), authCode)
+
+		if err != nil {
+			http.Error(w, "server error", 500)
+			return
+		}
+
+		redirect := redirectURI + "?code=" + code + "&state=" + state
+
+		http.Redirect(w, r, redirect, http.StatusFound)
+		return
+	}
 }

@@ -34,7 +34,7 @@ func (h *TokenHandler) Exchange(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	client, err := h.clientRepo.FindByClientID(r.Context(), clientID)
+	client, err := h.clientRepo.FindClientByClientID(r.Context(), clientID)
 
 	if err != nil {
 		http.Error(w, "invalid client", 401)

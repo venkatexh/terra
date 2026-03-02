@@ -40,6 +40,18 @@ func (r *Repository) Upsert(ctx context.Context, a *Authorization) error {
 	return err
 }
 
+func (r *Repository) CheckExists(ctx context.Context, groupID, clientDBID string) (bool, error) {
+	query := `
+		SELECT EXISTS (
+			SELECT 1 FROM oauth_authorizations
+			WHERE user_id = $1 AND client_db_id = $2
+		)
+	`
+
+	var exists bool
+	err := r.db.QueryRow(ctx, query, groupID, clientDBID).Scan(&exists)
+	return exists, err
+}
 func (r *Repository) FindByGroupID(ctx context.Context, groupID string) ([]AuthorizationDTO, error) {
 
 	query := `
@@ -80,7 +92,7 @@ func (r *Repository) FindByGroupID(ctx context.Context, groupID string) ([]Autho
 	return authorizations, nil
 }
 
-func (r *Repository) FindByUserIDandClientID(ctx context.Context, userID, clientID string) (*Authorization, error) {
+func (r *Repository) FindByUserIDandClientDBID(ctx context.Context, userID, clientID string) (*Authorization, error) {
 
 	query := `
 		SELECT id, user_id, client_id, scopes, created_at

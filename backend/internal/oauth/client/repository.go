@@ -83,6 +83,38 @@ func (r *Repository) FindByUserID(ctx context.Context, projectID string) ([]Clie
 	return clients, nil
 }
 
+func (r *Repository) FindClientByClientID(ctx context.Context, clientID string) (*ClientResponse, error) {
+
+	query := `
+		SELECT *
+		FROM oauth_clients
+		WHERE client_id = $1
+	`
+	row := r.db.QueryRow(ctx, query, clientID)
+
+	var c ClientResponse
+	err := row.Scan(
+		&c.ID,
+		&c.Name,
+		&c.ClientID,
+		&c.ClientSecret,
+		&c.CreatedAt,
+		&c.ProjectID,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	c.RedirectURIs, err = r.FindRedirectURIsByClientID(ctx, c.ID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &c, nil
+}
+
 func (r *Repository) FindByClientID(ctx context.Context, clientID string) (*ClientResponse, error) {
 
 	query := `
@@ -137,4 +169,20 @@ func (r *Repository) FindRedirectURIsByClientID(ctx context.Context, clientID st
 	}
 
 	return uris, nil
+}
+
+func (r *Repository) GetClientDBIDByClientID(ctx context.Context, clientID string) (string, error) {
+	var ClientDBID string
+	query := `
+		SELECT id
+		FROM oauth_clients
+		WHERE client_id = $1
+	`
+	err := r.db.QueryRow(ctx, query, clientID).Scan(&ClientDBID)
+
+	if err != nil {
+		return "", err
+	}
+
+	return ClientDBID, nil
 }
