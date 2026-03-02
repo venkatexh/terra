@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"log"
 	"terra/internal/auth/user"
 	"terra/internal/email"
 	"terra/internal/session"
@@ -58,7 +59,10 @@ func (s *Service) RequestOTP(ctx context.Context, email string) error {
 		return err
 	}
 
-	return s.mailer.SendOTP(email, rawOTP)
+	log.Printf("Sending OTP to %s: %s", email, rawOTP)
+
+	// return s.mailer.SendOTP(email, rawOTP)
+	return nil
 }
 
 func (s *Service) VerifyOTP(ctx context.Context, rawOTP string) (string, error) {
@@ -73,7 +77,6 @@ func (s *Service) VerifyOTP(ctx context.Context, rawOTP string) (string, error) 
 		return "", errors.New("Invalid OTP")
 	}
 
-	// 2️⃣ validate
 	if otp.Used {
 		return "", errors.New("OTP already used")
 	}
@@ -82,7 +85,6 @@ func (s *Service) VerifyOTP(ctx context.Context, rawOTP string) (string, error) 
 		return "", errors.New("OTP expired")
 	}
 
-	// 3️⃣ mark used
 	if err := s.otps.MarkUsed(ctx, otp.ID); err != nil {
 		return "", err
 	}
