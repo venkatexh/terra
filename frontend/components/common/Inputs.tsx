@@ -64,7 +64,7 @@ type Input = {
   type?: string;
   name: string;
   value?: string;
-  label: string;
+  label?: string;
   resize?: boolean;
   className?: string;
   placeholder: string;
