@@ -1,17 +1,19 @@
 package main
 
 import (
-	// "context"
 	"log"
 	"net/http"
 	"terra/internal/auth/magic"
+	"terra/internal/auth/otp"
 	"terra/internal/auth/token"
 	"terra/internal/auth/user"
+
 	"terra/internal/config"
 	"terra/internal/db"
 	"terra/internal/email"
 	"terra/internal/group"
 	"terra/internal/middleware"
+
 	"terra/internal/oauth/authcode"
 	"terra/internal/oauth/authorization"
 	"terra/internal/oauth/client"
@@ -41,8 +43,9 @@ func main() {
 	groupRepo := group.NewRepository(pool)
 	authorizationRepo := authorization.NewRepository(pool)
 	projectRepo := project.NewRepository(pool)
+	otpRepo := otp.NewRepository(pool)
 
-	authorizeHandler := handlers.NewAuthorizeHandler(authRepo)
+	authorizeHandler := handlers.NewAuthorizeHandler(authorizationRepo, authRepo, clientRepo)
 	tokenHandler := handlers.NewTokenHandler(authRepo, oauthTokenRepo, clientRepo)
 	// loginHandler := authHandlers.NewLoginHandler(sessionRepo)
 
@@ -51,12 +54,14 @@ func main() {
 	// authSvc := auth.NewService(userRepo, tokenRepo)
 
 	emailSvc := email.NewService()
+	otpSvc := otp.NewService(userRepo, otpRepo, sessionRepo, emailSvc)
 	magicService := magic.NewService(userRepo, tokenRepo, sessionRepo, emailSvc)
 	groupSvc := group.NewService(groupRepo)
 	authorizationSvc := authorization.NewService(authorizationRepo)
 	projectsSvc := project.NewService(projectRepo)
 
 	userHandler := user.NewHandler(userSvc)
+	otpHandler := otp.NewHandler(otpSvc)
 	magicHandler := magic.NewHandler(magicService)
 	groupHandler := group.NewHandler(groupSvc)
 	authorizationHandler := authorization.NewHandler(authorizationSvc)
@@ -66,7 +71,7 @@ func main() {
 	r := chi.NewRouter()
 
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins: []string{"http://localhost:3000"},
+		AllowedOrigins: []string{"http://localhost:3000", "http://localhost:3001"},
 		AllowedMethods: []string{"GET", "PUT", "POST", "DELETE"},
 		AllowedHeaders: []string{
 			"Access",
@@ -110,7 +115,10 @@ func main() {
 
 	r.Get("/oauth/authorize", authorizeHandler.Authorize)
 
-	r.Post("/oauth/token", tokenHandler.Exchange)
+	r.Post("/oauth/exchange", tokenHandler.Exchange)
+
+	r.Post("/auth/otp/request", otpHandler.RequestOTP)
+	r.Post("/auth/otp/verify", otpHandler.VerifyOTP)
 
 	r.Post("/auth/magic-link/request", magicHandler.RequestLink)
 	r.Get("/auth/magic-link/verify", magicHandler.VerifyLink)
