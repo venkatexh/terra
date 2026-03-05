@@ -57,7 +57,7 @@ func (h *ApproveHandler) Approve(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.authorizationRepo.Create(r.Context(), groupID, clientDBID)
+	err = h.authorizationRepo.Create(r.Context(), groupID, clientDBID, userID)
 
 	if err != nil {
 		http.Error(w, "server error", 500)

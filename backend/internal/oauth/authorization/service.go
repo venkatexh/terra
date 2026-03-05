@@ -12,8 +12,8 @@ func NewService(repo *Repository) *Service {
 	return &Service{repo: repo}
 }
 
-func (s *Service) CreateAuthorization(ctx context.Context, groupID, clientDBID string) error {
-	return s.repo.Create(ctx, groupID, clientDBID)
+func (s *Service) CreateAuthorization(ctx context.Context, groupID, clientDBID, userID string) error {
+	return s.repo.Create(ctx, groupID, clientDBID, userID)
 }
 
 func (s *Service) HasConsent(ctx context.Context, userID, clientID string) (bool, error) {

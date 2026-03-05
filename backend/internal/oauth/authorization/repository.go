@@ -15,12 +15,12 @@ func NewRepository(db *pgxpool.Pool) *Repository {
 	return &Repository{db: db}
 }
 
-func (r *Repository) Create(ctx context.Context, groupID, clientDBID string) error {
+func (r *Repository) Create(ctx context.Context, groupID, clientDBID, userID string) error {
 	ID := uuid.NewString()
 	_, err := r.db.Exec(ctx, `
-		INSERT INTO oauth_authorizations(id, group_id, client_db_id)
-		VALUES ($1, $2, $3)
-	`, ID, groupID, clientDBID)
+		INSERT INTO oauth_authorizations(id, group_id, client_db_id, user_id)
+		VALUES ($1, $2, $3, $4)
+	`, ID, groupID, clientDBID, userID)
 	return err
 }
 

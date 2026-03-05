@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"terra/internal/middleware"
 )
 
 type Handler struct {
@@ -24,8 +25,9 @@ func (h *Handler) CreateAuthorization(w http.ResponseWriter, r *http.Request) {
 
 	groupID := req.GroupID
 	clientDBID := req.ClientDBID
+	userID := r.Context().Value(middleware.UserKey).(string)
 
-	if err := h.service.CreateAuthorization(r.Context(), groupID, clientDBID); err != nil {
+	if err := h.service.CreateAuthorization(r.Context(), groupID, clientDBID, userID); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
