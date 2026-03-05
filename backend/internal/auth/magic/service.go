@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	authEvent "terra/internal/auth/event"
 	"terra/internal/auth/token"
 	"terra/internal/auth/user"
 	"terra/internal/session"
@@ -18,10 +19,11 @@ type Service struct {
 	users    *user.Repository
 	tokens   *token.Repository
 	sessions *session.Repository
+	authSvc  *authEvent.AuthEventService
 	mailer   Mailer
 }
 
-func NewService(u *user.Repository, t *token.Repository, s *session.Repository, m Mailer) *Service {
+func NewService(u *user.Repository, t *token.Repository, s *session.Repository, a *authEvent.AuthEventService, m Mailer) *Service {
 	return &Service{users: u, tokens: t, sessions: s, mailer: m}
 }
 

@@ -3,6 +3,7 @@ package otp
 import (
 	"encoding/json"
 	"log"
+	"net"
 	"net/http"
 	"time"
 )
@@ -37,14 +38,22 @@ func (h *Handler) RequestOTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) VerifyOTP(w http.ResponseWriter, r *http.Request) {
+
 	token := r.URL.Query().Get("otp")
+
+	ip, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		return
+	}
+
+	ua := r.UserAgent()
 
 	if token == "" {
 		http.Error(w, "Missing OTP", http.StatusBadRequest)
 		return
 	}
 
-	sessionID, err := h.service.VerifyOTP(r.Context(), token)
+	sessionID, err := h.service.VerifyOTP(r.Context(), token, ip, ua)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return

@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	authEvent "terra/internal/auth/event"
 	"terra/internal/auth/magic"
 	"terra/internal/auth/otp"
 	"terra/internal/auth/token"
@@ -10,6 +11,7 @@ import (
 
 	"terra/internal/config"
 	"terra/internal/db"
+
 	"terra/internal/email"
 	"terra/internal/group"
 	"terra/internal/middleware"
@@ -44,6 +46,7 @@ func main() {
 	authorizationRepo := authorization.NewRepository(pool)
 	projectRepo := project.NewRepository(pool)
 	otpRepo := otp.NewRepository(pool)
+	authEventRepo := authEvent.NewAuthEventRepository(pool)
 
 	authorizeHandler := handlers.NewAuthorizeHandler(authorizationRepo, authRepo, clientRepo)
 	tokenHandler := handlers.NewTokenHandler(authRepo, oauthTokenRepo, clientRepo)
@@ -51,11 +54,12 @@ func main() {
 
 	userSvc := user.NewService(userRepo)
 	clientSvc := client.NewService(clientRepo, projectRepo)
+	authEventSvc := authEvent.NewAuthEventService(authEventRepo)
 	// authSvc := auth.NewService(userRepo, tokenRepo)
 
 	emailSvc := email.NewService()
-	otpSvc := otp.NewService(userRepo, otpRepo, sessionRepo, emailSvc)
-	magicService := magic.NewService(userRepo, tokenRepo, sessionRepo, emailSvc)
+	otpSvc := otp.NewService(userRepo, otpRepo, sessionRepo, authEventSvc, emailSvc)
+	magicService := magic.NewService(userRepo, tokenRepo, sessionRepo, authEventSvc, emailSvc)
 	groupSvc := group.NewService(groupRepo)
 	authorizationSvc := authorization.NewService(authorizationRepo)
 	projectsSvc := project.NewService(projectRepo)

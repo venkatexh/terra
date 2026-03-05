@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"log"
+	authEvent "terra/internal/auth/event"
 	"terra/internal/auth/user"
 	"terra/internal/email"
 	"terra/internal/session"
@@ -14,14 +15,15 @@ import (
 )
 
 type Service struct {
-	users    *user.Repository
-	otps     *Repository
-	sessions *session.Repository
-	mailer   *email.Service
+	users        *user.Repository
+	otps         *Repository
+	sessions     *session.Repository
+	authEventSvc *authEvent.AuthEventService
+	mailer       *email.Service
 }
 
-func NewService(u *user.Repository, o *Repository, s *session.Repository, m *email.Service) *Service {
-	return &Service{users: u, otps: o, sessions: s, mailer: m}
+func NewService(u *user.Repository, o *Repository, s *session.Repository, a *authEvent.AuthEventService, m *email.Service) *Service {
+	return &Service{users: u, otps: o, sessions: s, authEventSvc: a, mailer: m}
 }
 
 func (s *Service) RequestOTP(ctx context.Context, email string) error {
@@ -65,7 +67,7 @@ func (s *Service) RequestOTP(ctx context.Context, email string) error {
 	return nil
 }
 
-func (s *Service) VerifyOTP(ctx context.Context, rawOTP string) (string, error) {
+func (s *Service) VerifyOTP(ctx context.Context, rawOTP string, ip, ua string) (string, error) {
 	hash := HashOTP(rawOTP)
 
 	otp, err := s.otps.FindByHash(ctx, hash)
@@ -97,6 +99,12 @@ func (s *Service) VerifyOTP(ctx context.Context, rawOTP string) (string, error) 
 
 	if err := s.sessions.Create(ctx, session); err != nil {
 		return "", err
+	}
+
+	err = s.authEventSvc.RecordEvent(ctx, otp.UserID, nil, "LOGIN", "SUCCESS", ip, ua, nil)
+
+	if err != nil {
+		log.Println("error creating auth event: ", err)
 	}
 
 	return session.ID, nil
